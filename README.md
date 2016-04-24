@@ -32,7 +32,7 @@ docker run  -p 10051:10051 --name zabbix-server \
 You'll have to pass environment parameters to the container. 
 
 | Variable   | Description|
-| -----------|:-------------:|
+| -----------|-------------|
 | DBHOST     | The host on which the database is running. |
 | DBUSER     | The username to use for accassing the MySQL database|
 | DBPASSWORD | The password for the DBUSER. |
