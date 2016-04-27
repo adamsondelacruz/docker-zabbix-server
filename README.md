@@ -6,9 +6,18 @@
 This docker container only contains an Zabbix server which is configured to use an MySQL database, but doesn't have an database server in the container. When using this container, you'll need to have already have an MySQL database running. Either in an docker container or somewhere on an server.
 Also this container has no zabbix-web configured, so you'll have to `wdijkerman/zabbix-web` or use an other container.
 
+## Prerequisites
+
+An MySQL database and user should be available before starting the container. This container will take care of the database provisioning.
+
 ## Versions
 
+### Dockerfile
 - `0.0.1`, `latest` [(Dockerfile)](https://github.com/dj-wasabi/docker-zabbix-server/blob/master/Dockerfile)
+
+### Zabbix
+
+Current version: 3.0.1
 
 # Install the container
 
