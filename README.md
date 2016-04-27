@@ -47,6 +47,6 @@ See file: License
 
 # Issues
 
-Please report issues at https://github.com/dj-wasabi/docker-consul/issues 
+Please report issues at https://github.com/dj-wasabi/docker-zabbix-server/issues 
 
 Pull Requests are welcome!
