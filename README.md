@@ -45,7 +45,7 @@ You'll have to pass environment parameters to the container.
 | -------------|-------------|
 | ROOTPASSWORD | The password for the ROOT user in MySQL. |
 | DBHOST       | The host on which the database is running. |
-| DBUSER       | The username to use for accassing the MySQL database|
+| DBUSER       | The username to use for accessing the MySQL database|
 | DBPASSWORD   | The password for the DBUSER. |
 | DBPORT       | The port on which MySQL is running. Default: 3306 |
 | DBNAME       | The name of the database. Default: zabbix|
