@@ -8,7 +8,7 @@ Also this container has no zabbix-web configured, so you'll have to `wdijkerman/
 
 ## Prerequisites
 
-An MySQL database and user should be available before starting the container. This container will take care of the database provisioning.
+An MySQL server should be present. When the `ROOTPASSWORD` variable is set, it will create the database and create the user `DBUSER`.
 
 ## Versions
 
@@ -33,6 +33,7 @@ Basic usage of the container:
 
 ```bash
 docker run  -p 10051:10051 --name zabbix-server \
+            -e ROOTPASSWORD=secretpassword \
             -e DBHOST=192.168.1.153 -e DBUSER=zabbix \
             -e DBPASSWORD="zabbix-pass" \
             -e DBPORT=3306 -e DBNAME=zabbix wdijkerman/zabbix-server
@@ -40,13 +41,54 @@ docker run  -p 10051:10051 --name zabbix-server \
 
 You'll have to pass environment parameters to the container. 
 
-| Variable   | Description|
-| -----------|-------------|
-| DBHOST     | The host on which the database is running. |
-| DBUSER     | The username to use for accassing the MySQL database|
-| DBPASSWORD | The password for the DBUSER. |
-| DBPORT     | The port on which MySQL is running. Default: 3306 |
-| DBNAME     | The name of the database. Default: zabbix|
+| Variable     | Description|
+| -------------|-------------|
+| ROOTPASSWORD | The password for the ROOT user in MySQL. |
+| DBHOST       | The host on which the database is running. |
+| DBUSER       | The username to use for accassing the MySQL database|
+| DBPASSWORD   | The password for the DBUSER. |
+| DBPORT       | The port on which MySQL is running. Default: 3306 |
+| DBNAME       | The name of the database. Default: zabbix|
+
+When `ROOTPASSWORD` is not supplied, the database specific with `DBNAME` and the user `DBUSER` should already be available.
+
+# Volumes
+
+There is one volume configured:
+
+```
+/zabbix
+```
+
+Example:
+```bash
+docker run  -p 10051:10051 --name zabbix-server \
+            -v /data/zabbix:/zabbix \
+            -e ROOTPASSWORD=secretpassword \
+            -e DBHOST=192.168.1.153 -e DBUSER=zabbix \
+            -e DBPASSWORD="zabbix-pass" \
+            -e DBPORT=3306 -e DBNAME=zabbix wdijkerman/zabbix-server
+```
+
+This volume contains the following directories when the container is started:
+```
+alertscripts
+externalscripts
+modules
+serverconfd
+ssl
+```
+
+Explanation of directories:
+
+| Directory       | Purpose|
+| ----------------|-------------|
+| alertscripts    | Directory for the alert scripts. (`AlertScriptsPath` parameter)|
+| externalscripts | Directory containing the external scripts. (`ExternalScripts` parameter)|
+| modules         | Directory where modules can be stored/placed. (`LoadModulePath` parameter |
+| serverconfd     | Directory where configuration can be placed (`Include` parameter) |
+| ssl             | Directory for SSL files. (`SSLCertLocation` and/or `SSLKeyLocation` or other ssl configuration parameters|
+
 
 # License
 

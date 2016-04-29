@@ -33,6 +33,8 @@ EXPOSE 10051
 ADD zabbix-server.sh /bin/zabbix-server.sh
 RUN chmod +x /bin/zabbix-server.sh
 
+VOLUME ["/zabbix"]
+
 ENV SHELL /bin/bash
 
 CMD ["/bin/zabbix-server.sh"]

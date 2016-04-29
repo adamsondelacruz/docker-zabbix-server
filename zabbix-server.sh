@@ -103,8 +103,8 @@ TrapperTimeout=${TRAPPERTIMEOUT:-300}
 UnreachablePeriod=${UNREACHABLEPERIOD:-45}
 UnavailableDelay=${UNAVAILABLEDELAY:-60}
 UnreachableDelay=${UNREACHABLEDELAY:-15}
-AlertScriptsPath=${ALERTSCRIPTSPATH:-/var/lib/zabbix/alertscripts}
-ExternalScripts=${EXTERNALSCRIPTS:-/var/lib/zabbix/externalscripts}
+AlertScriptsPath=/zabbix/alertscripts
+ExternalScripts=/zabbix/externalscripts
 FpingLocation=${FPINGLOCATION:-/usr/sbin/fping}
 ${SSH_KEYLOCATION}
 LogSlowQueries=${LOGSLOWQUERIES:-3000}
@@ -114,11 +114,11 @@ ProxyConfigFrequency=${PROXYCONFIGFREQUENCY:-3600}
 ProxyDataFrequency=${PROXYDATAFREQUENCY:-1}
 AllowRoot=${ALLOWROOT:-0}
 User=${USER:-zabbix}
-Include=${INCLUDE:-/usr/local/etc/zabbix_server.conf.d/}
-SSLCertLocation=${SSLCERTLOCATION:-/var/lib/zabbix/ssl/certs}
-SSLKeyLocation=${SSLKEYLOCATION:-/var/lib/zabbix/ssl/keys}
+Include=/zabbix/serverconfd
+SSLCertLocation=/zabbix/ssl/certs
+SSLKeyLocation=/zabbix/ssl/keys
 ${SSL_CALOCATION}
-LoadModulePath=${LOADMODULEPATH:-/var/lib/modules}
+LoadModulePath=/zabbix/modules
 ${LOAD_MODULE}
 ${TLS_CAFILE}
 ${TLS_CRLFILE}
@@ -126,25 +126,37 @@ ${TLS_CERTFILE}
 ${TLS_KEYFILE}
 EOF
 
-echo "Create include dir"
-mkdir -p ${INCLUDE:-/usr/local/etc/zabbix_server.conf.d/}
+# Creating some directories
+for directory in /zabbix/serverconfd /zabbix/ssl/certs /zabbix/ssl/keys /zabbix/modules /zabbix/externalscripts /zabbix/alertscripts; do
+    mkdir -p ${directory}
+    chown zabbix:zabbix ${directory}
+done
 
 # Check if database is already provisioned
-echo "Check if we need to provision database"
-ALREADY_EXECUTED=$(mysql -h ${DBHOST} -u ${DBUSER} -p"${DBPASSWORD}" -D "${DBNAME}" -Ne 'select userid from users where alias = "Admin";' | wc -l)
+echo "Check if we have an 'ROOTPASSWORD' variable to see if database is already available"
+if [[ -n ${ROOTPASSWORD} ]]
+    then    # Check if we have an password for Root
+            DATABASE_EXISTS=$(mysql -h ${DBHOST} -uroot -p${ROOTPASSWORD} -Ne 'show databases' | grep "${DBNAME}" | wc -l)
+            if [[ ${DATABASE_EXISTS} -eq 0 ]]
+                then mysql -h ${DBHOST} -uroot -p${ROOTPASSWORD} -Ne "create database ${DBNAME} character set utf8 collate utf8_bin;"
+                     mysql -h ${DBHOST} -uroot -p${ROOTPASSWORD} -Ne "UPDATE mysql.user SET Grant_priv='Y', Super_priv='Y' WHERE User='root';"
+                     mysql -h ${DBHOST} -uroot -p${ROOTPASSWORD} -Ne "grant all privileges on ${DBNAME}.* to ${DBUSER}@'%' identified by '${DBPASSWORD}';"
+            fi
+fi
 
+echo "Check if we need to provision database"
+ALREADY_EXECUTED=$(mysql -h ${DBHOST} -u${DBUSER} -p"${DBPASSWORD}" -D "${DBNAME}" -Ne 'select userid from users where alias = "Admin";' 2> /dev/null | wc -l)
 if [[ ${ALREADY_EXECUTED} -eq 0 ]]
     then
         echo "Provision database"
         cd /opt/zabbix/database
 
-        for sqlfile in `ls -1 *.sql`; do
+        for sqlfile in schema.sql images.sql data.sql; do
             echo "Provision with file ${sqlfile}"
-            mysql -h "${DBHOST}" -u "${DBUSER}" -p"${DBPASSWORD}" -D "${DBNAME}" < ${sqlfile}
+            mysql -h "${DBHOST}" -u"${DBUSER}" -p"${DBPASSWORD}" -D "${DBNAME}" < ${sqlfile}
         done
 fi
 
 # Start Zabbix Server
 echo "Startig Zabbix"
-echo "sudo -u zabbix /usr/local/sbin/zabbix_server -c /etc/zabbix/zabbix_server.conf"
 sudo -u zabbix /usr/local/sbin/zabbix_server -fc /etc/zabbix/zabbix_server.conf
